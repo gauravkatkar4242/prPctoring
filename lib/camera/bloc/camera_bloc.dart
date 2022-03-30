@@ -6,7 +6,6 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:palette_generator/palette_generator.dart';
-// import 'package:gallery_saver/gallery_saver.dart';
 import 'package:proctoring/timer.dart';
 
 part 'camera_event.dart';

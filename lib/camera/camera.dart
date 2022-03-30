@@ -1,10 +1,8 @@
 import 'package:camera/camera.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:proctoring/camera/bloc/camera_bloc.dart';
-import 'package:provider/src/provider.dart';
 
 class Camera extends StatefulWidget {
   const Camera({Key? key}) : super(key: key);
