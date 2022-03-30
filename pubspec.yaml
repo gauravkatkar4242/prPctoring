@@ -38,9 +38,8 @@ dependencies:
   equatable:
   camera: ^0.9.4+9
   flutter_bloc:
-#  gallery_saver: ^2.3.2
   palette_generator: ^0.3.3
-
+  gallery_saver:
 
 
 

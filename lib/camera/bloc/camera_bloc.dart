@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:bloc/bloc.dart';
 import 'package:camera/camera.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:proctoring/timer.dart';
 
 part 'camera_event.dart';
@@ -84,30 +87,41 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
       return;
     }
     try {
-      // emit(CapturingImageInProgressState(_controller));
+      emit(CapturingImageInProgressState(_controller));
       final XFile file = await _controller!.takePicture();
-      print(file.name);
-      print(file.path);
-      Image img = Image.file(File(file.path));
-      // emit(CameraReadyState(_controller));
-      if (kIsWeb) {
-        file.saveTo("path");
-      } else {
-        // GallerySaver.saveImage(file.path);
-      }
-      List<String> l = ["white.png", "black.jpeg", "blue.jpg", "green.png", "red.jpeg", "o1.jpeg"];
-      for (var name in l) {
-        String img_path = "assets/" + name;
-        PaletteGenerator color = await PaletteGenerator.fromImageProvider(AssetImage(img_path));
-        print(name +" : " + color.dominantColor.toString());
-        print("*******************************");
-      }
+      await saveImage(file);
+      emit(CameraReadyState(_controller));
 
-
-      // file.saveTo("path");
     } on CameraException catch (e) {
       //will set state to CameraExceptionState state
       emit(CameraExceptionState(e.description.toString()));
+    }
+  }
+
+  Future<void> saveImage(XFile file) async {
+
+    Image img = Image.file(File(file.path));
+    // emit(CameraReadyState(_controller));
+    if (kIsWeb) {
+      file.saveTo("path");
+    } else {
+      await GallerySaver.saveImage(file.path,albumName: '/');
+      print(file.name);
+    }
+    List<String> l = [
+      "white.png",
+      "black.jpeg",
+      "blue.jpg",
+      "green.png",
+      "red.jpeg",
+      "o1.jpeg"
+    ];
+    for (var name in l) {
+      String img_path = "assets/" + name;
+      PaletteGenerator color =
+          await PaletteGenerator.fromImageProvider(AssetImage(img_path));
+      print(name + " : " + color.dominantColor.toString());
+      print("*******************************");
     }
   }
 

@@ -49,6 +49,8 @@ class _CameraState extends State<Camera> with WidgetsBindingObserver {
     return Scaffold(body: SafeArea(
       child: BlocBuilder<CameraBloc, CameraState>(
         builder: (context, state) {
+          print(state.toString() + "***************");
+
           if (state is CameraInitializingState) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -73,18 +75,20 @@ class _CameraState extends State<Camera> with WidgetsBindingObserver {
                 )
               ],
             );
-          } else if (State is CapturingImageInProgressState) {
-            return Column(
-              children: const [
-                CircularProgressIndicator(
-                  color: Colors.red,
-                ),
-                Text("Saving Image")
+          }
+          else if (state is CapturingImageInProgressState){
+            return Stack(
+              children: [
+                _cameraView(state),
+                const Align(
+                  alignment: Alignment.bottomCenter,
+                  child: CircularProgressIndicator(color: Colors.red,)
+                )
               ],
             );
-          } else {
-            return const Text("Something is Wrong. No State");
+
           }
+          return const Text("Something is Wrong");
         },
       ),
     ));
