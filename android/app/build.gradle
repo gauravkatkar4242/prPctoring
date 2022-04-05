@@ -65,4 +65,13 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.google.android.gms:play-services-vision:20.1.2'
+    implementation 'com.google.android.gms:play-services-vision-common:19.1.2'
+    implementation 'com.google.android.gms:play-services-vision-image-label:18.1.0'
+    implementation platform('com.google.firebase:firebase-bom:26.2.0')
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+
+    // for kotlin
+    implementation 'androidx.work:work-runtime-ktx:2.7.1'
+
 }

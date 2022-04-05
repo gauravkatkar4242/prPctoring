@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:proctoring/camera/bloc/camera_bloc.dart';
-import 'package:proctoring/camera/camera.dart';
+
+import 'package:proctoring/mainPage/tempPage.dart';
+
+import 'mainPage/camera/bloc/camera_bloc.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,7 +23,7 @@ class MyApp extends StatelessWidget {
       home: BlocProvider(
         create: (BuildContext context) =>
             CameraBloc(),
-          child: const Camera())
+          child: TempPage())
     );
   }
 }

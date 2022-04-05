@@ -23,4 +23,9 @@ class CameraExceptionState extends CameraState{
   final String errorMsg;
   const CameraExceptionState(this.errorMsg);
 }
+
+class AppDefocusdState extends CameraState{
+  final CameraController? controller;
+  const AppDefocusdState(this.controller);
+}
 class CameraDisposedState extends CameraState{}

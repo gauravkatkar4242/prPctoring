@@ -2,7 +2,9 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:proctoring/camera/bloc/camera_bloc.dart';
+
+import 'bloc/camera_bloc.dart';
+
 
 class Camera extends StatefulWidget {
   const Camera({Key? key}) : super(key: key);
@@ -12,45 +14,33 @@ class Camera extends StatefulWidget {
 }
 
 class _CameraState extends State<Camera> with WidgetsBindingObserver {
-  late CameraBloc bloc;
+
+
 
   @override
   void didChangeDependencies() {
-    bloc = context.read<CameraBloc>();
-    bloc.add(InitCameraEvent());
-    WidgetsBinding.instance!.addObserver(this);
+
     super.didChangeDependencies();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.inactive) {
-      print("inactive called************");
-      context
-          .read<CameraBloc>()
-          .add(DisposeCameraEvent()); // Free up memory when camera not active
-    } else if (state == AppLifecycleState.resumed) {
-      print("Resume called************");
-      context.read<CameraBloc>().add(
-          InitCameraEvent()); // Reinitialize the camera with same properties
-    }
+
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance!.removeObserver(this);
-    bloc.add(DisposeCameraEvent());
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: SafeArea(
+    return SafeArea(
       child: BlocBuilder<CameraBloc, CameraState>(
         builder: (context, state) {
-          print(state.toString() + "***************");
-
+          print("State is +++++++++++++ " + state.toString());
           if (state is CameraInitializingState) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -65,6 +55,13 @@ class _CameraState extends State<Camera> with WidgetsBindingObserver {
             return Stack(
               children: [
                 _cameraView(state),
+                SizedBox(
+                    height: 0,
+                    width: 0,
+                    child: ElevatedButton(
+                        onPressed: () {},
+                        child: const SizedBox(
+                            child: CircularProgressIndicator()))),
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: ElevatedButton(
@@ -72,27 +69,34 @@ class _CameraState extends State<Camera> with WidgetsBindingObserver {
                         context.read<CameraBloc>().add(CaptureImageEvent()),
                     child: const Icon(Icons.camera),
                   ),
-                )
+                ),
               ],
             );
-          }
-          else if (state is CapturingImageInProgressState){
+          } else if (state is CapturingImageInProgressState) {
             return Stack(
               children: [
                 _cameraView(state),
-                const Align(
-                  alignment: Alignment.bottomCenter,
-                  child: CircularProgressIndicator(color: Colors.red,)
-                )
+                 Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.red,
+                      ),
+                    ))
               ],
             );
-
+          } else if (state is AppDefocusdState) {
+            return _cameraView(state);
           }
           return const Text("Something is Wrong");
         },
       ),
-    ));
+    );
   }
+
 
   Widget _cameraView(state) {
     return LayoutBuilder(builder: (context, constraints) {
@@ -103,12 +107,13 @@ class _CameraState extends State<Camera> with WidgetsBindingObserver {
               child: CameraPreview(state.controller!))
 
           /* for camera screen mobile 👇*/
-          : Transform.scale(
-              scale: 1 /
-                  (state.controller!.value.aspectRatio *
-                      (constraints.maxWidth / constraints.maxHeight)),
-              alignment: Alignment.topCenter,
-              child: CameraPreview(state.controller));
+          : CameraPreview(state.controller);
+      // Transform.scale(
+      //     scale: 1 /
+      //         (state.controller!.value.aspectRatio *
+      //             (constraints.maxWidth / constraints.maxHeight)),
+      //     alignment: Alignment.topCenter,
+      //     child: CameraPreview(state.controller));
     });
   }
 }

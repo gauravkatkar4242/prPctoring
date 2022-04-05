@@ -13,4 +13,7 @@ class TimerTickedEvent extends CameraEvent{
   const TimerTickedEvent({required this.duration});
 }
 class CaptureImageEvent extends CameraEvent{}
+
+class AppDefocusEvent extends CameraEvent{}
+class AppFocusEvent extends CameraEvent{}
 class DisposeCameraEvent extends CameraEvent{}

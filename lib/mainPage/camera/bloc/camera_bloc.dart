@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:camera/camera.dart';
@@ -8,8 +7,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:palette_generator/palette_generator.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:proctoring/timer.dart';
+
+import '../mobile_helper.dart' if (dart.library.html) '../web_helper.dart' as helper;
 
 part 'camera_event.dart';
 
@@ -19,13 +19,15 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
   CameraController? _controller;
   final Timer _timer = const Timer();
   StreamSubscription<int>? _timerSubscription;
-  int totalRecordingTime = 20;
+  int totalRecordingTime = 10;
 
   CameraBloc() : super(CameraInitial()) {
     on<CameraEvent>((event, emit) {});
     on<InitCameraEvent>(_initCamera);
     on<TimerTickedEvent>(_onTimerTicked);
     on<CaptureImageEvent>(_captureImage);
+    on<AppDefocusEvent>(_onDefocused);
+    on<AppFocusEvent>(_onFocused);
     on<DisposeCameraEvent>(_disposeCamera);
   }
 
@@ -41,16 +43,21 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
         _timerSubscription?.cancel();
         await _controller!.dispose();
       }
-      CameraDescription cameraDescription;
-      if (cameraList.length == 1) {
-        cameraDescription = cameraList[0]; // for desktop
-      } else {
-        cameraDescription = cameraList[1]; // for mobile select front camera
-      }
+      CameraDescription? cameraDescription;
+        for (var camera in cameraList) {
+          if (camera.lensDirection == CameraLensDirection.external || camera.lensDirection == CameraLensDirection.front){
+            cameraDescription = camera;
+            break;
+          }
+        }
 
-      final CameraController cameraController = CameraController(
+      if (cameraDescription == null){
+        emit(const CameraExceptionState("No Camera Found!!!"));
+        return;
+      }
+    final CameraController cameraController = CameraController(
         cameraDescription,
-        ResolutionPreset.max,
+        ResolutionPreset.medium,
         enableAudio: true,
       );
       _controller = cameraController;
@@ -76,9 +83,16 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     }
   }
 
+  void _onDefocused(AppDefocusEvent event, Emitter<CameraState> emit){
+    emit(AppDefocusdState(_controller));
+  }
+  void _onFocused(AppFocusEvent event, Emitter<CameraState> emit){
+    emit(CameraReadyState(_controller));
+  }
   Future<void> _captureImage(
       CaptureImageEvent event, Emitter<CameraState> emit) async {
     debugPrint("--- Event :- _captureImage :: CurrentState :- $state");
+    var beforeCapturingState = state;
     if (_controller == null || !_controller!.value.isInitialized) {
       return;
     }
@@ -88,9 +102,14 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     }
     try {
       emit(CapturingImageInProgressState(_controller));
-      final XFile file = await _controller!.takePicture();
-      await saveImage(file);
-      emit(CameraReadyState(_controller));
+      final XFile capturedImage = await _controller!.takePicture();
+      await saveImage(capturedImage);
+      if (beforeCapturingState is AppDefocusdState){
+        emit(AppDefocusdState(_controller));
+      }
+      else{
+        emit(CameraReadyState(_controller));
+      }
 
     } on CameraException catch (e) {
       //will set state to CameraExceptionState state
@@ -98,16 +117,22 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     }
   }
 
-  Future<void> saveImage(XFile file) async {
-
-    Image img = Image.file(File(file.path));
-    // emit(CameraReadyState(_controller));
+  Future<void> saveImage(XFile image) async {
+    // Image img = Image.file(File(file.path));
+    // io.File image = io.File(file.path);
     if (kIsWeb) {
-      file.saveTo("path");
+      image.saveTo("path");
     } else {
-      await GallerySaver.saveImage(file.path,albumName: '/');
-      print(file.name);
+      await GallerySaver.saveImage(image.path,albumName: '/');
+      print(image.name);
+      Image a;
+      var faces = await helper.getNumberOfFaces(image);
     }
+  }
+
+
+
+  Future<void> paletteGenerator() async {
     List<String> l = [
       "white.png",
       "black.jpeg",
@@ -117,9 +142,9 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
       "o1.jpeg"
     ];
     for (var name in l) {
-      String img_path = "assets/" + name;
+      String imgPath = "assets/" + name;
       PaletteGenerator color =
-          await PaletteGenerator.fromImageProvider(AssetImage(img_path));
+          await PaletteGenerator.fromImageProvider(AssetImage(imgPath));
       print(name + " : " + color.dominantColor.toString());
       print("*******************************");
     }
