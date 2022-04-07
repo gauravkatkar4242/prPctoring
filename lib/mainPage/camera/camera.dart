@@ -69,7 +69,14 @@ class _CameraState extends State<Camera> {
               ],
             );
           } else if (state is AppDefocusdState) {
-            return _cameraView(state);
+            return const Center(child: Text("App running in Background"));
+          }else if (state is CameraInitial) {
+            return  Center(child: Column(
+              children: const [
+                Text("Loading"),
+                CircularProgressIndicator()
+              ],
+            ));
           }
           return const Text("Something is Wrong");
         },

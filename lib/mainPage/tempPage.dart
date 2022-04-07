@@ -20,7 +20,6 @@ class _TempPageState extends State<TempPage> with WidgetsBindingObserver {
   @override
   void didChangeDependencies() {
     bloc = context.read<CameraBloc>();
-    bloc.add(InitCameraEvent());
     WidgetsBinding.instance!.addObserver(this);
     addEventListener();
     super.didChangeDependencies();
@@ -55,6 +54,9 @@ class _TempPageState extends State<TempPage> with WidgetsBindingObserver {
         context.read<CameraBloc>().add(AppDefocusEvent());
         _showDialog(context);
       }
+    }
+    if (state == AppLifecycleState.resumed){
+      context.read<CameraBloc>().add(InitCameraEvent());
     }
 
     if (state == AppLifecycleState.resumed) {}

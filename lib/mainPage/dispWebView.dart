@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/src/provider.dart';
 import 'package:webviewx/webviewx.dart';
+
+import 'camera/bloc/camera_bloc.dart';
 
 class DisplayWebView extends StatefulWidget {
   const DisplayWebView({Key? key}) : super(key: key);
@@ -29,44 +32,20 @@ class _DisplayWebViewState extends State<DisplayWebView> {
               setState(() {
                 url = nameController.text;
               });
+              context.read<CameraBloc>().add(InitCameraEvent());
+              context.read<CameraBloc>().add(InitTimerEvent());
             },
           ),
         ],
       );
     } else {
       return LayoutBuilder(builder: (context, constraints) {
-        return Stack(
-          children: [
-            WebViewX(
-              initialContent: url,
-              initialSourceType: SourceType.url,
-              onWebViewCreated: (controller) => webViewController = controller,
-              height: constraints.maxHeight,
-              width: constraints.maxWidth,
-            ),
-            Row(
-              children: [
-                ElevatedButton(
-                  onPressed: () async {
-                    var canGoBack = await webViewController.canGoBack();
-                    if (canGoBack) {
-                      webViewController.goBack();
-                    }
-                  },
-                  child: const Icon(Icons.arrow_back),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    var canGoBack = await webViewController.canGoForward();
-                    if (canGoBack) {
-                      webViewController.goForward();
-                    }
-                  },
-                  child: const Icon(Icons.arrow_forward),
-                )
-              ],
-            ),
-          ],
+        return WebViewX(
+          initialContent: url,
+          initialSourceType: SourceType.url,
+          onWebViewCreated: (controller) => webViewController = controller,
+          height: constraints.maxHeight,
+          width: constraints.maxWidth,
         );
       });
     }

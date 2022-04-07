@@ -9,7 +9,8 @@ import 'package:gallery_saver/gallery_saver.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:proctoring/timer.dart';
 
-import '../mobile_helper.dart' if (dart.library.html) '../web_helper.dart' as helper;
+import '../mobile_helper.dart' if (dart.library.html) '../web_helper.dart'
+    as helper;
 
 part 'camera_event.dart';
 
@@ -24,6 +25,7 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
   CameraBloc() : super(CameraInitial()) {
     on<CameraEvent>((event, emit) {});
     on<InitCameraEvent>(_initCamera);
+    on<InitTimerEvent>(_initTimer);
     on<TimerTickedEvent>(_onTimerTicked);
     on<CaptureImageEvent>(_captureImage);
     on<AppDefocusEvent>(_onDefocused);
@@ -44,18 +46,19 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
         await _controller!.dispose();
       }
       CameraDescription? cameraDescription;
-        for (var camera in cameraList) {
-          if (camera.lensDirection == CameraLensDirection.external || camera.lensDirection == CameraLensDirection.front){
-            cameraDescription = camera;
-            break;
-          }
+      for (var camera in cameraList) {
+        if (camera.lensDirection == CameraLensDirection.external ||
+            camera.lensDirection == CameraLensDirection.front) {
+          cameraDescription = camera;
+          break;
         }
+      }
 
-      if (cameraDescription == null){
+      if (cameraDescription == null) {
         emit(const CameraExceptionState("No Camera Found!!!"));
         return;
       }
-    final CameraController cameraController = CameraController(
+      final CameraController cameraController = CameraController(
         cameraDescription,
         ResolutionPreset.medium,
         enableAudio: true,
@@ -67,28 +70,35 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
       }
       await cameraController.initialize();
       emit(CameraReadyState(cameraController));
-      _timerSubscription?.cancel();
-      _timerSubscription = _timer
-          .countDownTimer(timeRemaining: totalRecordingTime)
-          .listen((duration) => add(TimerTickedEvent(duration: duration)));
     } on CameraException catch (e) {
       emit(CameraExceptionState(e.description.toString()));
     }
   }
 
+  void _initTimer(InitTimerEvent event, Emitter<CameraState> emit) {
+    _timerSubscription?.cancel();
+    _timerSubscription = _timer
+        .countDownTimer(timeRemaining: totalRecordingTime)
+        .listen((duration) => add(TimerTickedEvent(duration: duration)));
+  }
+
   void _onTimerTicked(TimerTickedEvent event, Emitter<CameraState> emit) {
     debugPrint("_timerTicked ${event.duration}");
-    if (event.duration % 5 == 0) {
+    if (event.duration % 30 == 0) {
       add(CaptureImageEvent());
     }
   }
 
-  void _onDefocused(AppDefocusEvent event, Emitter<CameraState> emit){
+  Future<void> _onDefocused(
+      AppDefocusEvent event, Emitter<CameraState> emit) async {
     emit(AppDefocusdState(_controller));
+    await closeCamera();
   }
-  void _onFocused(AppFocusEvent event, Emitter<CameraState> emit){
+
+  void _onFocused(AppFocusEvent event, Emitter<CameraState> emit) {
     emit(CameraReadyState(_controller));
   }
+
   Future<void> _captureImage(
       CaptureImageEvent event, Emitter<CameraState> emit) async {
     debugPrint("--- Event :- _captureImage :: CurrentState :- $state");
@@ -104,13 +114,11 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
       emit(CapturingImageInProgressState(_controller));
       final XFile capturedImage = await _controller!.takePicture();
       await saveImage(capturedImage);
-      if (beforeCapturingState is AppDefocusdState){
+      if (beforeCapturingState is AppDefocusdState) {
         emit(AppDefocusdState(_controller));
-      }
-      else{
+      } else {
         emit(CameraReadyState(_controller));
       }
-
     } on CameraException catch (e) {
       //will set state to CameraExceptionState state
       emit(CameraExceptionState(e.description.toString()));
@@ -123,14 +131,12 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     if (kIsWeb) {
       image.saveTo("path");
     } else {
-      await GallerySaver.saveImage(image.path,albumName: '/');
+      await GallerySaver.saveImage(image.path, albumName: '/');
       print(image.name);
       Image a;
       var faces = await helper.getNumberOfFaces(image);
     }
   }
-
-
 
   Future<void> paletteGenerator() async {
     List<String> l = [
@@ -153,11 +159,15 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
   Future<void> _disposeCamera(
       DisposeCameraEvent event, Emitter<CameraState> emit) async {
     debugPrint("--- Event :- _disposeCamera :: CurrentState :- $state");
+    await closeCamera();
+    _timerSubscription?.cancel();
+    emit(CameraDisposedState());
+  }
+
+  Future<void> closeCamera() async {
     if (_controller != null) {
       await _controller?.dispose();
       debugPrint("Camera Disposed");
     }
-    _timerSubscription?.cancel();
-    emit(CameraDisposedState());
   }
 }
