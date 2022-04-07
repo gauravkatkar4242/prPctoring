@@ -50,8 +50,6 @@ class _TempPageState extends State<TempPage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.inactive) {
-      print("on inactive called ************ " +
-          context.read<CameraBloc>().state.toString());
       if (context.read<CameraBloc>().state is! CameraInitializingState ||
           context.read<CameraBloc>().state is! AppDefocusdState) {
         context.read<CameraBloc>().add(AppDefocusEvent());

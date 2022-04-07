@@ -13,34 +13,14 @@ class Camera extends StatefulWidget {
   _CameraState createState() => _CameraState();
 }
 
-class _CameraState extends State<Camera> with WidgetsBindingObserver {
+class _CameraState extends State<Camera> {
 
-
-
-  @override
-  void didChangeDependencies() {
-
-    super.didChangeDependencies();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: BlocBuilder<CameraBloc, CameraState>(
         builder: (context, state) {
-          print("State is +++++++++++++ " + state.toString());
           if (state is CameraInitializingState) {
             return const Center(
               child: CircularProgressIndicator(),
@@ -82,7 +62,7 @@ class _CameraState extends State<Camera> with WidgetsBindingObserver {
                       margin: const EdgeInsets.only(bottom: 10),
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(
+                      child: const CircularProgressIndicator(
                         color: Colors.red,
                       ),
                     ))

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:webviewx/webviewx.dart';
 
@@ -21,7 +20,7 @@ class _DisplayWebViewState extends State<DisplayWebView> {
         title: const Text("Enter URL"),
         actions: <Widget>[
           TextField(
-              controller: nameController..text = "https://jombay.com/",
+              controller: nameController..text = "https://www.google.co.in/",
               onChanged: (v) => nameController.text = v,
               decoration: const InputDecoration(labelText: "Enter URL here")),
           ElevatedButton(

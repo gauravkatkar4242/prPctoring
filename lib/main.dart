@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
       home: BlocProvider(
         create: (BuildContext context) =>
             CameraBloc(),
-          child: TempPage())
+          child: const TempPage())
     );
   }
 }
